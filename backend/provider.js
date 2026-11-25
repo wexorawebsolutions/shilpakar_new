@@ -1,13 +1,7 @@
-
 import crypto from "node:crypto";
 
 // Instamojo API v1.1 — Private API Key + Private Auth Token
-export function makeInstamojo({
-  baseUrl,
-  apiKey,
-  authToken,
-  fetcher = fetch
-}) {
+export function makeInstamojo({ baseUrl, apiKey, authToken, fetcher = fetch }) {
   const origin = new URL(baseUrl);
 
   if (
@@ -28,17 +22,23 @@ export function makeInstamojo({
         Accept: "application/json",
         "X-Api-Key": apiKey,
         "X-Auth-Token": authToken,
-        ...(options.headers || {})
+        ...(options.headers || {}),
       },
-      signal: AbortSignal.timeout(15000)
+      signal: AbortSignal.timeout(15000),
     });
 
     const data = await response.json().catch(() => null);
 
     if (!response.ok || data?.success === false) {
-      throw new Error(
-        `Instamojo request failed: HTTP ${response.status}`
-      );
+      const reason =
+        data?.message || data?.error || data?.errors || "No details returned";
+
+      console.error("Instamojo rejected payment request:", {
+        status: response.status,
+        reason,
+      });
+
+      throw new Error(`Instamojo request failed: HTTP ${response.status}`);
     }
 
     return data;
@@ -51,7 +51,7 @@ export function makeInstamojo({
       phone,
       amountRupees,
       redirectUrl,
-      webhookUrl
+      webhookUrl,
     }) {
       const form = new URLSearchParams({
         purpose: `Shilpakar Challenge ${registrationId}`,
@@ -61,23 +61,20 @@ export function makeInstamojo({
         redirect_url: redirectUrl,
         allow_repeated_payments: "False",
         send_email: "False",
-        send_sms: "False"
+        send_sms: "False",
       });
 
       if (webhookUrl) {
         form.set("webhook", webhookUrl);
       }
 
-      const result = await request(
-        "/api/1.1/payment-requests/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: form
-        }
-      );
+      const result = await request("/api/1.1/payment-requests/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: form,
+      });
 
       const payment = result?.payment_request;
 
@@ -89,11 +86,9 @@ export function makeInstamojo({
 
       if (
         checkout.protocol !== "https:" ||
-        ![
-          "test.instamojo.com",
-          "www.instamojo.com",
-          "instamojo.com"
-        ].includes(checkout.hostname)
+        !["test.instamojo.com", "www.instamojo.com", "instamojo.com"].includes(
+          checkout.hostname,
+        )
       ) {
         throw new Error("Invalid Instamojo checkout URL");
       }
@@ -107,21 +102,19 @@ export function makeInstamojo({
 
       return {
         id: String(payment.id),
-        url: checkout.toString()
+        url: checkout.toString(),
       };
     },
 
     getRequest(id) {
-      return request(
-        `/api/1.1/payment-requests/${encodeURIComponent(id)}/`
-      );
+      return request(`/api/1.1/payment-requests/${encodeURIComponent(id)}/`);
     },
 
     getPayment(paymentId, requestId) {
       return request(
-        `/api/1.1/payment-requests/${encodeURIComponent(requestId)}/${encodeURIComponent(paymentId)}/`
+        `/api/1.1/payment-requests/${encodeURIComponent(requestId)}/${encodeURIComponent(paymentId)}/`,
       );
-    }
+    },
   };
 }
 
@@ -137,9 +130,7 @@ export function verifyWebhookMac(body, salt) {
 
   const entries = Object.entries(body)
     .filter(([key]) => key.toLowerCase() !== "mac")
-    .sort(([a], [b]) =>
-      a.toLowerCase().localeCompare(b.toLowerCase())
-    );
+    .sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
   const expected = crypto
     .createHmac("sha1", salt)
@@ -148,12 +139,12 @@ export function verifyWebhookMac(body, salt) {
 
   return crypto.timingSafeEqual(
     Buffer.from(expected, "hex"),
-    Buffer.from(body.mac, "hex")
+    Buffer.from(body.mac, "hex"),
   );
 }
 
-export const normalizeRequest = r => r?.payment_request || r;
-export const normalizePayment = p => p?.payment || p;
+export const normalizeRequest = (r) => r?.payment_request || r;
+export const normalizePayment = (p) => p?.payment || p;
 
 export function paymentBelongsToRequest(payment, requestId) {
   const ref = payment?.payment_request;
@@ -174,7 +165,7 @@ export function isVerifiedPaid({
   request,
   requestId,
   paymentId,
-  amountPaise
+  amountPaise,
 }) {
   const p = normalizePayment(payment);
   const r = normalizeRequest(request);
