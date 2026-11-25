@@ -1848,60 +1848,6 @@
         }
       };
 
-      document.getElementById("f").onsubmit = (e) => {
-        e.preventDefault();
-        if (!ok()) {
-          openM();
-          return;
-        }
-        const val = (x) => x.value.trim();
-        const rec = {
-          name: val(n),
-          age: val(ag),
-          city: val(ct),
-          phone: val(p),
-          email: val(em),
-          batch: val(s),
-          height: val(h),
-          weight: val(wt),
-          goal: val(g),
-          time: new Date().toISOString(),
-        };
-        if (PAY.sheet) {
-          try {
-            fetch(PAY.sheet, {
-              method: "POST",
-              mode: "no-cors",
-              headers: { "Content-Type": "text/plain" },
-              body: JSON.stringify(rec),
-            });
-          } catch (x) {}
-        }
-        if (PAY.link.includes("YOUR_")) {
-          const m = Object.entries(rec)
-            .map(([k, v]) => k + ": " + (v || "-"))
-            .join("\n");
-          open(
-            "https://wa.me/" +
-              PAY.wa +
-              "?text=" +
-              encodeURIComponent(
-                "Hi Coach Anand, I want to join the 15 Days Water Challenge (₹299).\n" +
-                  m,
-              ),
-            "_blank",
-          );
-          return;
-        }
-        const q = new URLSearchParams({
-          data_name: rec.name.slice(0, 20),
-          data_email: rec.email,
-          data_phone: rec.phone,
-        });
-        sessionStorage && sessionStorage.setItem("reg", JSON.stringify(rec));
-        location.href = PAY.link + "?" + q;
-      };
-
       /* ornaments + floating icons */
       const OR = [
         ["💧", "🪷", "💧"],

@@ -151,7 +151,8 @@ app.post("/api/register", async (req, res) => {
     );
     return res.status(201).json({ checkoutUrl: request.url });
   } catch (error) {
-    console.error("Register/payment creation failed:", error.message);
+    console.error("Register/payment creation failed:", error);
+console.error("Underlying cause:", error.cause);
     return plainError(
       res,
       502,
