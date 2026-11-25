@@ -43,9 +43,9 @@ const pool = new Pool({
   connectionTimeoutMillis: 8000,
 });
 const provider = makeInstamojo({
-  baseUrl: INSTAMOJO_BASE_URL,
-  apiKey: INSTAMOJO_API_KEY,
-  authToken: INSTAMOJO_AUTH_TOKEN,
+  baseUrl: INSTAMOJO_BASE_URL.trim(),
+  apiKey: INSTAMOJO_API_KEY.trim(),
+  authToken: INSTAMOJO_AUTH_TOKEN.trim(),
 });
 const app = express();
 app.disable("x-powered-by");
