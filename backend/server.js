@@ -9,7 +9,7 @@ const {
   DATABASE_URL,
   INSTAMOJO_API_KEY,
   INSTAMOJO_AUTH_TOKEN,
-  INSTAMOJO_BASE_URL = "https://test.instamojo.com",
+  INSTAMOJO_BASE_URL = "https://www.instamojo.com",
   PUBLIC_BACKEND_URL,
   FRONTEND_ORIGIN,
   INSTAMOJO_PRIVATE_SALT = "",
