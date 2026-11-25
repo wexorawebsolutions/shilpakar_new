@@ -54,7 +54,7 @@ export function makeInstamojo({ baseUrl, apiKey, authToken, fetcher = fetch }) {
       webhookUrl,
     }) {
       const form = new URLSearchParams({
-        purpose: `Shilpakar Challenge ${registrationId}`,
+        purpose: "Shilpakar - 15 Days Water Challenge",
         amount: amountRupees.toFixed(2),
         buyer_name: name,
         phone,
@@ -99,6 +99,8 @@ export function makeInstamojo({ baseUrl, apiKey, authToken, fetcher = fetch }) {
       ) {
         throw new Error("Sandbox returned a live checkout");
       }
+
+      checkout.searchParams.set("embed", "form");
 
       return {
         id: String(payment.id),
