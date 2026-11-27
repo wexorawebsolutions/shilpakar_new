@@ -171,33 +171,42 @@ export function isVerifiedPaid({
   paymentId,
   amountPaise,
 }) {
-  const p = normalizePayment(payment);
   const r = normalizeRequest(request);
+  const paymentRequest = payment?.payment_request;
+  const p = paymentRequest?.payment;
 
-  const requestAmount = Math.round(Number(r?.amount) * 100);
-  const paymentAmount = Math.round(Number(p?.amount) * 100);
+  if (payment?.success !== true || request?.success !== true || !p || !r) {
+    return false;
+  }
 
-  console.log("PAYMENT VERIFICATION DEBUG:", {
-    paymentStatus: p?.status,
-    receivedPaymentId: p?.id,
-    expectedPaymentId: paymentId,
-    receivedRequestId: r?.id,
-    expectedRequestId: requestId,
-    paymentRequestReference: p?.payment_request,
-    paymentBelongsToRequest: paymentBelongsToRequest(p, requestId),
+  const expectedAmount = Number(amountPaise);
+  const requestAmount = Math.round(Number(r.amount) * 100);
+  const unitPrice = Math.round(Number(p.unit_price) * 100);
+  const totalPaid = Math.round(Number(p.amount) * 100);
+
+  const verified =
+    p.status === "Credit" &&
+    p.currency === "INR" &&
+    String(r.id || "") === requestId &&
+    String(paymentRequest.id || "") === requestId &&
+    String(p.payment_id || "") === paymentId &&
+    paymentBelongsToRequest(p, requestId) &&
+    Number(p.quantity) === 1 &&
+    Number.isSafeInteger(expectedAmount) &&
+    expectedAmount > 0 &&
+    requestAmount === expectedAmount &&
+    unitPrice === expectedAmount &&
+    Number.isSafeInteger(totalPaid) &&
+    totalPaid >= expectedAmount;
+
+  console.log("PAYMENT VERIFICATION RESULT:", {
+    status: p.status,
     requestAmount,
-    paymentAmount,
-    expectedAmountPaise: amountPaise,
-    paymentKeys: Object.keys(p || {}),
-    requestKeys: Object.keys(r || {}),
+    unitPrice,
+    totalPaid,
+    expectedAmount,
+    verified,
   });
 
-  return (
-    p?.status === "Credit" &&
-    String(r?.id || "") === requestId &&
-    String(p?.id || "") === paymentId &&
-    paymentBelongsToRequest(p, requestId) &&
-    requestAmount === amountPaise &&
-    (p.amount == null || paymentAmount === amountPaise)
-  );
+  return verified;
 }

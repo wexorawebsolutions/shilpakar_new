@@ -215,21 +215,257 @@ async function confirmPayment(requestId, paymentId) {
     client.release();
   }
 }
+
 function renderResult(res, success) {
   res.set("Cache-Control", "no-store");
   res.set("Content-Type", "text/html; charset=utf-8");
-  // Server-rendered status; never rely on frontend query parameters to assert successful payment.
-  const title = success ? "Congratulations!" : "Payment not confirmed";
-  const copy = success
-    ? "Your ₹299 registration is confirmed. Welcome to the 15-Day Water & Wellness Challenge. Starting 7 December 2026."
-    : "We have not verified a successful payment. If you were charged, contact support with your Instamojo payment ID.";
-  const icon = success ? "✓" : "!";
-  res
-    .status(success ? 200 : 202)
-    .send(
-      `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${title} · Shilpakar</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;box-sizing:border-box;background:#fff9f2;color:#3b2410;font:16px system-ui,-apple-system,sans-serif}.card{max-width:540px;padding:48px 32px;border-radius:28px;background:white;text-align:center;box-shadow:0 24px 70px #d9731a24}.icon{display:grid;place-items:center;margin:auto;background:#ffead6;color:#bd6011;border-radius:50%;width:72px;height:72px;font-size:36px}h1{font:700 clamp(28px,6vw,43px) Georgia,serif;margin:22px 0 15px}p{line-height:1.8;color:#675342}a{display:inline-block;background:#f28c28;border-radius:50px;color:#29190d;padding:14px 24px;text-decoration:none;font-weight:700;margin-top:16px}</style></head><body><main class="card"><div class="icon">${icon}</div><h1>${title}</h1><p>${copy}</p><a href="https://wa.me/917400009160">Contact Shilpakar Support</a></main></body></html>`,
-    );
+
+  const groupUrl = (
+    process.env.SHILPAKAR_WHATSAPP_GROUP_URL || ""
+  ).trim();
+
+  const validGroupUrl =
+    /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9_-]+$/
+      .test(groupUrl);
+
+  const whatsappMessage = encodeURIComponent(
+    "Hello Sir, I have successfully completed my enrollment for the 15 Days Water Challenge."
+  );
+
+  const contactUrl =
+    `https://wa.me/917400009160?text=${whatsappMessage}`;
+
+  const title = success
+    ? "Enrollment Confirmed!"
+    : "Payment not confirmed";
+
+  const content = success
+    ? `
+      <div class="icon success">✓</div>
+      <span class="tag">PAYMENT SUCCESSFUL</span>
+
+      <h1>Enrollment Confirmed!</h1>
+
+      <p>
+        Congratulations! You have successfully enrolled
+        in the <strong>15 Days Water Challenge.</strong>
+      </p>
+
+      <div class="details">
+        <div>📅 <strong>Starts:</strong> 7 December 2026</div>
+        <div>👨‍🏫 <strong>Coach:</strong> Anand</div>
+        <div>🎥 <strong>Mode:</strong> Online Live Sessions</div>
+        <div>✅ <strong>Status:</strong> Payment Verified</div>
+      </div>
+
+      <h3>What's next?</h3>
+      <p>
+        Join our official WhatsApp group to receive
+        class links and important instructions.
+      </p>
+
+      ${validGroupUrl ? `
+        <a class="btn whatsapp"
+           href="${groupUrl}"
+           target="_blank"
+           rel="noopener noreferrer">
+          Join Official WhatsApp Group →
+        </a>
+      ` : ""}
+
+      <a class="btn secondary"
+         href="${contactUrl}"
+         target="_blank"
+         rel="noopener noreferrer">
+        Connect with Coach Anand
+      </a>
+
+      <p class="footer">
+        Welcome to the Shilpakar Fitness family!
+      </p>
+    `
+    : `
+      <div class="icon warning">!</div>
+      <h1>Payment not confirmed</h1>
+      <p>
+        We have not verified your payment yet.
+        If your account was charged, please do not
+        make another payment.
+      </p>
+      <a class="btn"
+         href="https://wa.me/917400009160">
+        Contact Shilpakar Support
+      </a>
+    `;
+
+  return res.status(success ? 200 : 202).send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport"
+            content="width=device-width, initial-scale=1">
+      <meta name="robots" content="noindex,nofollow">
+      <meta name="referrer" content="no-referrer">
+
+      <title>${title} | Shilpakar Fitness</title>
+
+      <style>
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          min-height: 100vh;
+          display: grid;
+          place-items: center;
+          padding: 24px;
+          background: linear-gradient(
+            145deg, #fffaf4, #ffead7
+          );
+          color: #3b2410;
+          font-family: system-ui, sans-serif;
+        }
+
+        .card {
+          width: 100%;
+          max-width: 540px;
+          background: #fff;
+          padding: 40px 30px;
+          border-radius: 28px;
+          text-align: center;
+          box-shadow: 0 20px 70px #d9731a20;
+          animation: appear .6s ease both;
+        }
+
+        @keyframes appear {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .icon {
+          width: 82px;
+          height: 82px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          margin: 0 auto 20px;
+          font-size: 42px;
+        }
+
+        .success {
+          background: #e7f8ed;
+          color: #16a34a;
+        }
+
+        .warning {
+          background: #ffead6;
+          color: #d9731a;
+        }
+
+        .tag {
+          font-size: 11px;
+          letter-spacing: 2px;
+          font-weight: 700;
+          color: #168c49;
+        }
+
+        h1 {
+          font-family: Georgia, serif;
+          font-size: clamp(28px, 6vw, 40px);
+          margin: 15px 0;
+        }
+
+        h3 {
+          margin-bottom: 8px;
+        }
+
+        p {
+          font-size: 15px;
+          line-height: 1.7;
+          color: #786354;
+        }
+
+        .details {
+          background: #fff8f0;
+          border: 1px solid #ffe4ca;
+          padding: 20px;
+          margin: 24px 0;
+          border-radius: 18px;
+          text-align: left;
+          display: grid;
+          gap: 14px;
+          font-size: 14px;
+        }
+
+        .btn {
+          display: block;
+          width: 100%;
+          padding: 16px 20px;
+          border-radius: 50px;
+          text-decoration: none;
+          font-weight: 700;
+          margin-top: 12px;
+          background: #f28c28;
+          color: #29190d;
+          transition: .2s ease;
+        }
+
+        .whatsapp {
+          background: #168c49;
+          color: #fff;
+        }
+
+        .secondary {
+          background: #fff;
+          border: 1.5px solid #168c49;
+          color: #168c49;
+        }
+
+        .btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 20px #00000010;
+        }
+
+        .footer {
+          font-size: 12px;
+          margin-top: 24px;
+        }
+
+        @media (max-width: 480px) {
+          .card {
+            padding: 30px 20px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .card {
+            animation: none;
+          }
+
+          .btn {
+            transition: none;
+          }
+        }
+      </style>
+    </head>
+
+    <body>
+      <main class="card">
+        ${content}
+      </main>
+    </body>
+    </html>
+  `);
 }
+
 app.get("/payment/return", async (req, res) => {
   const requestId = req.query.payment_request_id,
     paymentId = req.query.payment_id;
