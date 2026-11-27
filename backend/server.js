@@ -109,9 +109,10 @@ app.get("/health", (_req, res) =>
   }),
 );
 app.post("/api/register", async (req, res) => {
-  const { name, age, phone, batch, consent } = req.body || {};
+  const { name, age, phone, email, batch, consent } = req.body || {};
   const cleanName = typeof name === "string" ? name.trim() : "";
   const cleanPhone = typeof phone === "string" ? phone.replace(/\D/g, "") : "";
+  const cleanEmail = typeof email === "string" ? email.trim() : "";
   const cleanAge = Number(age);
   if (
     cleanName.length < 2 ||
@@ -120,13 +121,15 @@ app.post("/api/register", async (req, res) => {
     cleanAge < 18 ||
     cleanAge > 90 ||
     !/^[6-9]\d{9}$/.test(cleanPhone) ||
+    cleanEmail.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) ||
     !batches.has(batch) ||
     consent !== true
   )
     return plainError(
       res,
       400,
-      "Please check name, adult age, 10-digit Indian WhatsApp number, batch and consent.",
+      "Please check name, adult age, WhatsApp number, email, batch and consent.",
     );
   let regId = null;
   try {
@@ -139,6 +142,7 @@ app.post("/api/register", async (req, res) => {
       registrationId: regId,
       name: cleanName,
       phone: cleanPhone,
+      email: cleanEmail,
       amountRupees: amountPaise / 100,
       redirectUrl: `${backendOrigin}/payment/return`,
       webhookUrl: INSTAMOJO_PRIVATE_SALT
@@ -152,7 +156,7 @@ app.post("/api/register", async (req, res) => {
     return res.status(201).json({ checkoutUrl: request.url });
   } catch (error) {
     console.error("Register/payment creation failed:", error);
-console.error("Underlying cause:", error.cause);
+    console.error("Underlying cause:", error.cause);
     return plainError(
       res,
       502,

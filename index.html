@@ -1540,6 +1540,16 @@
             placeholder="10-digit mobile number"
           />
 
+          <label for="email">Email address</label>
+          <input
+            id="email"
+            type="email"
+            autocomplete="email"
+            maxlength="254"
+            required
+            placeholder="Enter your email address"
+          />
+
           <label>Preferred batch</label>
           <select id="s" required>
             <option value="">Select batch</option>
@@ -1828,6 +1838,7 @@
               name: document.getElementById("n").value.trim(),
               age: Number(document.getElementById("ag").value),
               phone: document.getElementById("p").value.trim(),
+              email: document.getElementById("email").value.trim(),
               batch: document.getElementById("s").value,
               consent: true,
             }),

@@ -49,6 +49,7 @@ export function makeInstamojo({ baseUrl, apiKey, authToken, fetcher = fetch }) {
       registrationId,
       name,
       phone,
+      email,
       amountRupees,
       redirectUrl,
       webhookUrl,
@@ -58,6 +59,7 @@ export function makeInstamojo({ baseUrl, apiKey, authToken, fetcher = fetch }) {
         amount: amountRupees.toFixed(2),
         buyer_name: name,
         phone,
+        email,
         redirect_url: redirectUrl,
         allow_repeated_payments: "False",
         send_email: "False",
@@ -174,6 +176,21 @@ export function isVerifiedPaid({
 
   const requestAmount = Math.round(Number(r?.amount) * 100);
   const paymentAmount = Math.round(Number(p?.amount) * 100);
+
+  console.log("PAYMENT VERIFICATION DEBUG:", {
+    paymentStatus: p?.status,
+    receivedPaymentId: p?.id,
+    expectedPaymentId: paymentId,
+    receivedRequestId: r?.id,
+    expectedRequestId: requestId,
+    paymentRequestReference: p?.payment_request,
+    paymentBelongsToRequest: paymentBelongsToRequest(p, requestId),
+    requestAmount,
+    paymentAmount,
+    expectedAmountPaise: amountPaise,
+    paymentKeys: Object.keys(p || {}),
+    requestKeys: Object.keys(r || {}),
+  });
 
   return (
     p?.status === "Credit" &&
